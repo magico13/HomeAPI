@@ -1,0 +1,64 @@
+﻿@page
+@model HomeAPI.Pages.LightsModel
+@{
+    ViewData["Title"] = "Lights";
+}
+
+<script type="text/javascript">
+    function updateBrightness(id, val)
+    {
+        val = val * 2.54;
+        //document.getElementById("valBox").innerHTML = id + " " + val;
+        $.ajax('api/lights/' + id + '/brightness/' + val, { method: 'PUT' });
+    }
+
+    function toggleLight(id)
+    {
+        $.ajax('api/lights/' + id + '/toggle', { method: 'PUT' });
+    }
+</script>
+
+<h2>Light Controller</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Light</th>
+            <th style="text-align:center">Brightness</th>
+            <th style="text-align:center">State</th>
+            <th style="text-align:center">Toggle</th>
+        </tr>
+    </thead>
+    <tbody>
+        @for (int i = 0; i < Model.Lights.Count; i++)
+        {
+            var light = Model.Lights[i];
+            if (!light.State.Reachable)
+            {
+                continue;
+            }
+            double briScaled = Math.Round(light.State.Bri / 2.54, 0);
+            string on = light.State.On ? "<b>ON</b>" : "OFF";
+            <tr>
+                <td>
+                    @light.Name
+                </td>
+                <td style="text-align:center">
+                    @if (light.State.On)
+                    {
+                        <input type="range" min="0" max="100" step="10" oninput="updateBrightness(@light.ID, this.value)" />
+                    }
+                    else
+                    {
+                        <span>--</span>
+                    }
+                    </td>
+                <td style="text-align:center;width:50px">@Html.Raw(on)</td>
+                <td style="text-align:center">
+                    <button onclick="toggleLight(@light.ID)">
+                        Toggle
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

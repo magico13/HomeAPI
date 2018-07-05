@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2035
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HomeAPI", "HomeAPI\HomeAPI.csproj", "{5F0E825C-AC57-4F43-900F-6D58C224621C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5F0E825C-AC57-4F43-900F-6D58C224621C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F0E825C-AC57-4F43-900F-6D58C224621C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F0E825C-AC57-4F43-900F-6D58C224621C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F0E825C-AC57-4F43-900F-6D58C224621C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {92D3E65F-713D-49AF-9804-9D66C26CF617}
+	EndGlobalSection
+EndGlobal
