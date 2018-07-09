@@ -50,13 +50,11 @@ namespace HomeAPI.Connectors
         public string APIURL { get { return $"{BaseURL}/api/{UserKey}/"; } }
     }
 
-    public class HueConnector : IHueConnector
+    public class HueConnector : ConnectorBase, IHueConnector
     {
         private HueCredentials credentials = null;
         private const string API_FILE = "Configuration/hueAPI.private";
         private const string UNCONFIGURED_EXCEPTION = "Hue API is not yet configured.";
-
-        private static HttpClient _client;
 
         public HueConnector()
         {

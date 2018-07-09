@@ -32,6 +32,7 @@ namespace HomeAPI
             });
 
             services.AddTransient<IHueConnector, HueConnector>();
+            services.AddTransient<IEcobeeConnector, EcobeeConnector>();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
