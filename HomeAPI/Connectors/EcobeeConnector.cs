@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using HomeAPI.Models;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using System;
@@ -12,8 +13,29 @@ namespace HomeAPI.Connectors
 {
     public interface IEcobeeConnector
     {
+        /// <summary>
+        /// Gets a new user access token using the refresh token
+        /// </summary>
+        /// <returns>Success</returns>
         Task<bool> RefreshTokenAsync();
+        /// <summary>
+        /// Gets the Thermostat Summary, a lightweight set of info that can be polled more frequently
+        /// (ideally 3 minutes)
+        /// </summary>
+        /// <returns>The entire summary string</returns>
         Task<string> GetThermostatSummaryAsync();
+        /// <summary>
+        /// Gets a Thermostat, or returns a cached one if nothing has changed since the last call
+        /// (Expensive, 15 minutes recommended. Cache reduces this problem)
+        /// </summary>
+        /// <returns>A full Thermostat</returns>
+        Task<EcobeeThermostat> GetThermostatAsync();
+        /// <summary>
+        /// Forcibly gets a thermostat, ignoring the cached one. 
+        /// (Expensive, 15 minutes recommended)
+        /// </summary>
+        /// <returns>A full Thermostat</returns>
+        Task<EcobeeThermostat> ForceGetThermostatAsync();
     }
 
     public class EcobeeCredentials
@@ -79,8 +101,11 @@ namespace HomeAPI.Connectors
 
         private EcobeeCredentials credentials = null;
 
-        private DefaultContractResolver resolver = new DefaultContractResolver() { NamingStrategy = new CamelCaseNamingStrategy() }; //use camelCase
-        private JsonSerializerSettings serializerSettings = null;
+        private readonly DefaultContractResolver _resolver = new DefaultContractResolver() { NamingStrategy = new CamelCaseNamingStrategy() }; //use camelCase
+        private readonly JsonSerializerSettings _serializerSettings = null;
+
+        private static EcobeeThermostat _lastThermostat = null;
+        private static string _lastSummary = null;
 
         public EcobeeConnector()
         {
@@ -88,11 +113,16 @@ namespace HomeAPI.Connectors
             {
                 _client = new HttpClient();
             }
-            serializerSettings = new JsonSerializerSettings() { ContractResolver = resolver };
+            _serializerSettings = new JsonSerializerSettings() { ContractResolver = _resolver };
             credentials = EcobeeCredentials.LoadFromFile(API_FILE);
         }
 
-        private async Task validate()
+        /// <summary>
+        /// Call before making any API calls. Checks that the configuration is valid
+        /// and that the user token is not expired. Gets a new token if needed.
+        /// </summary>
+        /// <returns>Awaitable Task</returns>
+        private async Task Validate()
         {
             if (!credentials.CheckValidity())
             {
@@ -108,6 +138,7 @@ namespace HomeAPI.Connectors
             }
         }
 
+        /// <inheritdoc />
         public async Task<bool> RefreshTokenAsync()
         {
             if (!credentials.CheckValidity())
@@ -142,10 +173,10 @@ namespace HomeAPI.Connectors
             return false;
         }
 
-
+        /// <inheritdoc />
         public async Task<string> GetThermostatSummaryAsync()
         {
-            await validate();
+            await Validate();
             
             string url = API_URL + "1/thermostatSummary?json={\"selection\":{\"selectionType\":\"registered\",\"selectionMatch\":\"\"}}";
 
@@ -168,6 +199,66 @@ namespace HomeAPI.Connectors
                 throw;
             }
             return null;
+        }
+
+        /// <inheritdoc />
+        public async Task<EcobeeThermostat> ForceGetThermostatAsync()
+        {
+            await Validate();
+
+            string url = API_URL + "1/thermostat?json={\"selection\":{\"selectionType\":\"registered\",\"selectionMatch\":\"\"," +
+                "\"includeRuntime\":\"true\",\"includeSettings\":\"true\",\"includeEquipmentStatus\":\"true\",\"includeSensors\":\"true\"}}";//includeSettings, includeEquipmentStatus, includeSensors
+
+            try
+            {
+                using (HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Get, url))
+                {
+                    message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", credentials.AccessToken);
+
+                    HttpResponseMessage response = await _client.SendAsync(message);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string content = await response.Content.ReadAsStringAsync();
+                        JObject obj = JObject.Parse(content);
+                        if (obj.TryGetValue("thermostatList", out JToken thermostats))
+                        {
+                            foreach (JToken thermostat in thermostats)
+                            {
+                                //convert to a thermostat, but we'll actually stop after the first one because we're not handling the list right now
+                                _lastThermostat = thermostat.ToObject<EcobeeThermostat>();
+                                return _lastThermostat;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            return null;
+        }
+
+        /// <inheritdoc />
+        public async Task<EcobeeThermostat> GetThermostatAsync()
+        {
+            //get the summary, compare to the cached summary. If the same, return the cached one, otherwise update
+            if (_lastThermostat != null && _lastSummary != null)
+            {
+                string summary = await GetThermostatSummaryAsync();
+
+                if (string.Equals(summary, _lastSummary))
+                {
+                    return _lastThermostat;
+                }
+                _lastSummary = summary;
+            }
+            else if (_lastSummary == null)
+            { //we have no summary cached, update it (then update the thermostat too)
+                _lastSummary = await GetThermostatSummaryAsync();
+            }
+
+            return await ForceGetThermostatAsync();
         }
     }
 }

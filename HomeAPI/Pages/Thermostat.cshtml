@@ -7,5 +7,21 @@
 <h2>Thermostat</h2>
 
 <p>
-    @Model.ThermostatSummary
+    @Model.Thermostat.Name <br />
+    @Model.Thermostat.EquipmentStatus <br />
+    @(Model.Thermostat.Runtime.ActualTemperature / 10.0)F @(Model.Thermostat.Runtime.ActualHumidity)% humidity
 </p>
+
+<h3>Sensors</h3>
+@foreach (var sensor in Model.Thermostat.RemoteSensors)
+{
+    <div>
+        <p>
+            Name: @sensor.Name <br />
+            Temp: @(sensor.Temperature)F <br />
+            Humidity: @(sensor.Humidity)% <br />
+            Occupied: @sensor.Occupied
+        </p>
+    </div>
+
+}

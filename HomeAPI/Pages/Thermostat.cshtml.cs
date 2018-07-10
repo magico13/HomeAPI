@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using HomeAPI.Connectors;
+using HomeAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -13,7 +14,7 @@ namespace HomeAPI.Pages
         private readonly IEcobeeConnector _ecobeeConnector;
 
         [BindProperty]
-        public string ThermostatSummary { get; set; }
+        public EcobeeThermostat Thermostat { get; set; }
 
         public ThermostatModel(IEcobeeConnector ecobeeConnector)
         {
@@ -22,7 +23,7 @@ namespace HomeAPI.Pages
 
         public async Task OnGetAsync()
         {
-            ThermostatSummary = await _ecobeeConnector.GetThermostatSummaryAsync();
+            Thermostat = await _ecobeeConnector.GetThermostatAsync();
         }
     }
 }
