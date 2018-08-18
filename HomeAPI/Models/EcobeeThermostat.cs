@@ -23,6 +23,13 @@ namespace HomeAPI.Models
         public string EquipmentStatus { get; set; }
         public RemoteSensor[] RemoteSensors { get; set; }
 
+        [JsonIgnore]
+        public bool FanActive { get { return EquipmentStatus?.Contains("fan", StringComparison.OrdinalIgnoreCase) == true; } }
+        [JsonIgnore]
+        public bool CoolActive { get { return EquipmentStatus?.Contains("cool", StringComparison.OrdinalIgnoreCase) == true; } }
+        [JsonIgnore]
+        public bool HeatActive { get { return EquipmentStatus?.Contains("heat", StringComparison.OrdinalIgnoreCase) == true; } }
+
         public class ThermostatSettings
         {//There are a bunch of other settings that I don't really care about at the moment
             public string HvacMode { get; set; }

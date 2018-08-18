@@ -1,0 +1,81 @@
+﻿@page
+@model HomeAPI.Pages.DevicesModel
+@{
+    ViewData["Title"] = "Devices";
+}
+
+<script type="text/javascript">
+    function updateBrightness(id, val)
+    {
+        val = val * 2.54;
+        //document.getElementById("valBox").innerHTML = id + " " + val;
+        $.ajax('api/lights/' + id + '/brightness/' + val, { method: 'PUT' });
+    }
+
+    function toggleLight(id)
+    {
+        $.ajax('api/lights/' + id + '/toggle', { method: 'PUT' });
+        setTimeout(function () { location.reload(true) }, 500);//kinda shitty but it works
+    }
+</script>
+<div>
+    @for (int i = 0; i < Model.Lights.Count; i++)
+    {
+        var light = Model.Lights[i];
+
+        if (!light.State.Reachable)
+        {
+            continue;
+        }
+
+        string color = light.State.On ? "lightyellow" : "lightgray";
+
+        <div id="light" style="width:100px;height:100px;text-align:center;float:left;border:1px solid black;border-radius:15px;padding:15px;
+                background-color:@color"
+             onclick="toggleLight(@light.ID)">
+            <span>@light.Name</span>
+            @if (light.State.On)
+            {
+                double briScaled = Math.Round(light.State.Bri / 2.54, 0);
+                <input type="range" min="0" max="100" step="10" value="@briScaled" oninput="updateBrightness(@light.ID, this.value)" onclick="event.cancelBubble = true;" />
+            }
+        </div>
+    }
+
+    <div id="thermostat" style="width:100px;height:100px;text-align:center;float:left;border:1px solid black;border-radius:15px;padding:15px;
+                background-color:gray">
+        <span>Thermostat</span>
+        <span>
+            @if (Model.Thermostat.FanActive)
+            {
+                <img src="~/images/fan.png" width="25" height="25" />
+            }
+            @if (Model.Thermostat.CoolActive)
+            {
+                <img src="~/images/cool.png" width="25" height="25" />
+            }
+            @if (Model.Thermostat.HeatActive)
+            {
+                <img src="~/images/heat.png" width="25" height="25" />
+            }
+        </span>
+        <span>@(Model.Thermostat.Runtime.ActualTemperature / 10.0)F</span>
+        <span>@(Model.Thermostat.Runtime.ActualHumidity)%</span>
+    </div>
+
+    @foreach (var sensor in Model.Thermostat.RemoteSensors)
+    {
+        string color = sensor.Occupied ? "lightgreen" : "darkgray";
+
+        <div id="sensor" style="width:100px;height:100px;text-align:center;float:left;border:1px solid black;border-radius:15px;padding:15px;
+                background-color:@color">
+            <span>@sensor.Name</span>
+            <span>@(sensor.Temperature)F</span>
+            @if (sensor.Humidity > 0)
+            {
+                <span>@(sensor.Humidity)%</span>
+            }
+        </div>
+    }
+</div>
+<br style="clear:left" />

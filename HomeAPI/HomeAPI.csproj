@@ -10,6 +10,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Update="Pages\Devices.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="Configuration\ecobee.private">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
