@@ -63,15 +63,18 @@
         <span>@(Model.Thermostat.Runtime.ActualHumidity)%</span>
     </div>
 
-    @foreach (var sensor in Model.Thermostat.RemoteSensors)
+    @foreach (HomeAPI.Models.Interfaces.IRemoteSensor sensor in Model.RemoteSensors)
     {
         string color = sensor.Occupied ? "lightgreen" : "darkgray";
 
         <div id="sensor" style="width:100px;height:100px;text-align:center;float:left;border:1px solid black;border-radius:15px;padding:15px;
                 background-color:@color">
             <span>@sensor.Name</span>
-            <span>@(sensor.Temperature)F</span>
-            @if (sensor.Humidity > 0)
+            @if (sensor.HasTemperature)
+            {
+                <span>@(sensor.Temperature)F</span>
+            }
+            @if (sensor.HasHumidity)
             {
                 <span>@(sensor.Humidity)%</span>
             }

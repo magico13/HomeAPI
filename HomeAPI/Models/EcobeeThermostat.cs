@@ -65,7 +65,7 @@ namespace HomeAPI.Models
             public int[] DesiredCoolRange { get; set; }
         }
 
-        public class RemoteSensor
+        public class RemoteSensor : Interfaces.IRemoteSensor
         {
             public string Id { get; set; }
             public string Name { get; set; }
@@ -74,49 +74,107 @@ namespace HomeAPI.Models
             public bool InUse { get; set; }
             public RemoteSensorCapability[] Capability { get; set; }
 
+            private bool? hasTemp;
+            private bool? hasHumid;
+            private bool? hasOccupancy;
+
+            [JsonIgnore]
+            public bool HasTemperature
+            {
+                get
+                {
+                    if (hasTemp == null)
+                    {
+                        double temp = Temperature;
+                    }
+                    return hasTemp.GetValueOrDefault(false);
+                }
+            }
+
             [JsonIgnore]
             public double Temperature
             {
                 get
                 {
-                    foreach (RemoteSensorCapability cap in Capability)
+                    if (hasTemp.GetValueOrDefault(true))
                     {
-                        if (cap.Temperature > -100)
+                        foreach (RemoteSensorCapability cap in Capability)
                         {
-                            return cap.Temperature;
+                            if (cap.Temperature > -100)
+                            {
+                                hasTemp = true;
+                                return cap.Temperature;
+                            }
                         }
+                        hasTemp = false;
                     }
                     return -100;
                 }
             }
 
+
+            [JsonIgnore]
+            public bool HasHumidity
+            {
+                get
+                {
+                    if (hasHumid == null)
+                    {
+                        double humid = Humidity;
+                    }
+                    return hasHumid.GetValueOrDefault(false);
+                }
+            }
             [JsonIgnore]
             public int Humidity
             {
                 get
                 {
-                    foreach (RemoteSensorCapability cap in Capability)
+                    if (hasHumid.GetValueOrDefault(true))
                     {
-                        if (cap.Humidity > -100)
+                        foreach (RemoteSensorCapability cap in Capability)
                         {
-                            return cap.Humidity;
+                            if (cap.Humidity > -100)
+                            {
+                                hasHumid = true;
+                                return cap.Humidity;
+                            }
                         }
+                        hasHumid = false;
                     }
                     return -100;
                 }
             }
 
+
+            [JsonIgnore]
+            public bool HasOccupancy
+            {
+                get
+                {
+                    if (hasOccupancy == null)
+                    {
+                        bool occ = Occupied;
+                    }
+                    return hasOccupancy.GetValueOrDefault(false);
+                }
+            }
             [JsonIgnore]
             public bool Occupied
             {
                 get
                 {
-                    foreach (RemoteSensorCapability cap in Capability)
+                    if (hasOccupancy.GetValueOrDefault(true))
                     {
-                        if (cap.Occupied != null)
+                        foreach (RemoteSensorCapability cap in Capability)
                         {
-                            return cap.Occupied.GetValueOrDefault();
+                            if (cap.Occupied != null)
+                            {
+                                hasOccupancy = true;
+                                return cap.Occupied.GetValueOrDefault();
+                            }
                         }
+                        hasOccupancy = false;
                     }
                     return false;
                 }
