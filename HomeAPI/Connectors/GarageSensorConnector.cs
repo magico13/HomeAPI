@@ -1,5 +1,4 @@
 ﻿using HomeAPI.Models;
-using HomeAPI.Models.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -22,14 +21,15 @@ namespace HomeAPI.Connectors
         public async Task<List<GarageSensor>> GetSensorsAsync()
         {
             List<GarageSensor> sensors = new List<GarageSensor>();
-
+            double temp = Math.Round(await GetVariableAsync<double>("tempf"), 1); ;
             for (int i = 1; i <= 2; i++)
             {
-                GarageSensor door = new GarageSensor();
-                door.Name = $"Garage Door {i}";
-                door.Temperature = Math.Round(await GetVariableAsync<double>("tempf"), 1);
-                door.Occupied = await CallFunctionAsync("garage", $"door{i}") != 1;
-                sensors.Add(door);
+                sensors.Add(new GarageSensor
+                {
+                    Name = $"Garage Door {i}",
+                    Temperature = temp,
+                    Occupied = !await GetVariableAsync<bool>($"garage{i}")
+                });
             }
 
             return sensors;

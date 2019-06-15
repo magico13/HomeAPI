@@ -68,12 +68,20 @@ namespace HomeAPI.Connectors
             string url = $"https://api.particle.io/v1/devices/{_creds.DeviceID}/{functionName}?access_token={_creds.AccessToken}";
             try
             {
-                HttpResponseMessage response = await _client.PostAsync(url, new FormUrlEncodedContent(new Dictionary<string, string> { { "arg", arg } }));
+                HttpResponseMessage response = await _client.PostAsync(url, new FormUrlEncodedContent(
+                    new Dictionary<string, string>
+                    {
+                        ["arg"] = arg,
+                        ["format"] = "raw"
+                    }
+                    ));
                 if (response.IsSuccessStatusCode)
                 {
                     string content = await response.Content.ReadAsStringAsync();
-                    JObject obj = JObject.Parse(content);
-                    return obj.GetValue("return_value").Value<int>();
+                    if (int.TryParse(content, out int value))
+                    {
+                        return value;
+                    }
                 }
             }
             catch (Exception)
