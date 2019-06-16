@@ -21,14 +21,15 @@ namespace HomeAPI.Connectors
         public async Task<List<GarageSensor>> GetSensorsAsync()
         {
             List<GarageSensor> sensors = new List<GarageSensor>();
-            double temp = Math.Round(await GetVariableAsync<double>("tempf"), 1); ;
+            double temp = Math.Round(await GetVariableAsync<double>("tempf"), 1);
+            int state = await GetVariableAsync<int>("garageState");
             for (int i = 1; i <= 2; i++)
             {
                 sensors.Add(new GarageSensor
                 {
                     Name = $"Garage Door {i}",
                     Temperature = temp,
-                    Occupied = !await GetVariableAsync<bool>($"garage{i}")
+                    Occupied = (state & (i*2)-1) != ((i * 2) - 1)
                 });
             }
 
