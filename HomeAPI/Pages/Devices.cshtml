@@ -21,7 +21,9 @@
 <div>
     @foreach (HomeAPI.Models.TeslaVehicle vehicle in Model.Vehicles)
     {
-        <div id="vehicle" style="width:200px;height:200px;text-align:center;float:left;border:1px solid black;border-radius:15px;padding:15px;color:white;background-color:darkslategrey">
+        int height = Model.VehicleData.ContainsKey(vehicle.IdS) ? 200 : 100;
+
+        <div id="vehicle" style="width:200px;height:@(height)px;text-align:center;float:left;border:1px solid black;border-radius:15px;padding:15px;color:white;background-color:darkslategrey">
             <img src="~/images/maxwell_small.png" />
             <span>@vehicle.DisplayName is @vehicle.State</span>
 
@@ -65,7 +67,7 @@
     }
 
     <div id="thermostat" style="width:100px;height:100px;text-align:center;float:left;border:1px solid black;border-radius:15px;padding:15px;
-                background-color:gray">
+                background-color:gray;color:white">
         <span>Thermostat</span>
         <span>
             @if (Model.Thermostat.FanActive)
