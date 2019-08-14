@@ -84,6 +84,7 @@ namespace HomeAPI.Connectors
     {
         private const string USER_AGENT = "Magico13_HomeAPI";
         private const string API_FILE = "Configuration/tesla.private";
+        private const string AUTH_URL = "https://owner-api.teslamotors.com/oauth/token";
         private const string API_URL = "https://owner-api.teslamotors.com/api/1";
         private const string UNCONFIGURED_EXCEPTION = "Tesla API is not yet configured.";
 
@@ -177,10 +178,16 @@ namespace HomeAPI.Connectors
             }
 
             //use the refresh token to refresh the access token
-            string url = $"{API_URL}/oath/token?grant_type=refresh_token&refresh_token={_credentials.RefreshToken}&client_id={CLIENT_ID}&client_secret={CLIENT_SECRET}";
+            Dictionary<string, string> anonContent = new Dictionary<string, string>
+            {
+                ["grant_type"] = "refresh_token",
+                ["refresh_token"] = _credentials.RefreshToken,
+                ["client_id"] = CLIENT_ID,
+                ["client_secret"] = CLIENT_SECRET
+            };
             try
             {
-                HttpRequestMessage request = createRequest(HttpMethod.Post, url, "");
+                HttpRequestMessage request = createRequest(HttpMethod.Post, AUTH_URL, anonContent, false);
                 HttpResponseMessage response = await _client.SendAsync(request);
                 if (response.IsSuccessStatusCode)
                 {
@@ -197,7 +204,7 @@ namespace HomeAPI.Connectors
             return false;
         }
 
-        private HttpRequestMessage createRequest(HttpMethod method, string url, object content)
+        private HttpRequestMessage createRequest(HttpMethod method, string url, object content, bool useAuth=true)
         {
             HttpRequestMessage request = new HttpRequestMessage
             {
@@ -209,9 +216,12 @@ namespace HomeAPI.Connectors
                     { HttpRequestHeader.Authorization.ToString(), "Bearer "+_credentials.AccessToken },
                     { HttpRequestHeader.Accept.ToString(), "*/*" }
                 },
-                Content = new StringContent(JsonConvert.SerializeObject(content))
+                Content = new StringContent(JsonConvert.SerializeObject(content), System.Text.Encoding.UTF8, "application/json")
             };
-
+            if (!useAuth)
+            {
+                request.Headers.Remove(HttpRequestHeader.Authorization.ToString());
+            }
             return request;
         }
     }
